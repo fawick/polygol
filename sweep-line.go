@@ -55,7 +55,7 @@ func (sl *sweepLine) process(event *sweepEvent) ([]*sweepEvent, error) {
 
 	var node *splaytree.Node
 	if event.isLeft {
-		node = sl.tree.Insert(seg)
+		node = sl.tree.Add(seg)
 	} else {
 		node = sl.tree.Find(seg)
 	}
@@ -186,7 +186,7 @@ func (sl *sweepLine) splitSafely(segment *segment, point *point) []*sweepEvent {
 
 	// splitting can trigger consumption
 	if segment.consumedBy == nil {
-		sl.tree.Insert(segment)
+		sl.tree.Add(segment)
 	}
 	return newEvents
 }
