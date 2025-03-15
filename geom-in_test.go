@@ -17,9 +17,9 @@ func TestGeomInRingIn(t *testing.T) {
 		{1, 0},
 		{1, 1},
 	}
-	expectedPt1 := &point{x: 0, y: 0}
-	expectedPt2 := &point{x: 1, y: 0}
-	expectedPt3 := &point{x: 1, y: 1}
+	expectedPt1 := newPoint(0, 0)
+	expectedPt2 := newPoint(1, 0)
+	expectedPt3 := newPoint(1, 1)
 	poly := &polyIn{}
 	ringIn, err = op.newRingIn(ring, poly, true)
 	terr(t, err)

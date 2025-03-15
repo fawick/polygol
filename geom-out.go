@@ -73,9 +73,9 @@ func newRingOutFromSegments(allSegments []*segment) ([]*ringOut, error) {
 				if len(availableLEs) == 0 {
 					firstPt := events[0].point
 					lastPt := events[len(events)-1].point
-					return nil, fmt.Errorf(`Unable to complete output ring starting at [%f, %f].
-					Last matching segment found ends at [%f, %f].`,
-						firstPt.x, firstPt.y, lastPt.x, lastPt.y)
+					return nil, fmt.Errorf(`unable to complete output ring starting at [%f, %f]:
+					last matching segment found ends at [%f, %f]`,
+						firstPt.x.number(), firstPt.y.number(), lastPt.x.number(), lastPt.y.number())
 				}
 
 				// Only one way to go, so continue on the path.
@@ -136,11 +136,12 @@ func (ro *ringOut) getGeom() [][]float64 {
 	for i := 1; i < len(ro.events)-1; i++ {
 		pt := ro.events[i].point
 		nextPt := ro.events[i+1].point
-		if compareAngles(
-			[]float64{pt.x, pt.y},
-			[]float64{prevPt.x, prevPt.y},
-			[]float64{nextPt.x, nextPt.y},
-		) == 0 {
+		// if compareAngles(
+		// 	[]float64{pt.x, pt.y},
+		// 	[]float64{prevPt.x, prevPt.y},
+		// 	[]float64{nextPt.x, nextPt.y},
+		// ) == 0 {
+		if orient(pt.Vector, prevPt.Vector, nextPt.Vector) == 0 {
 			continue
 		}
 		points = append(points, pt)
@@ -155,11 +156,12 @@ func (ro *ringOut) getGeom() [][]float64 {
 	// check if the starting point is necessary
 	pt := points[0]
 	nextPt := points[1]
-	if compareAngles(
-		[]float64{pt.x, pt.y},
-		[]float64{prevPt.x, prevPt.y},
-		[]float64{nextPt.x, nextPt.y},
-	) == 0 {
+	// if compareAngles(
+	// 	[]float64{pt.x, pt.y},
+	// 	[]float64{prevPt.x, prevPt.y},
+	// 	[]float64{nextPt.x, nextPt.y},
+	// ) == 0 {
+	if orient(pt.Vector, prevPt.Vector, nextPt.Vector) == 0 {
 		points = points[1:]
 	}
 
@@ -178,7 +180,7 @@ func (ro *ringOut) getGeom() [][]float64 {
 	}
 	orderedPoints := [][]float64{}
 	for i := iStart; i != iEnd; i += step {
-		orderedPoints = append(orderedPoints, []float64{points[i].x, points[i].y})
+		orderedPoints = append(orderedPoints, []float64{points[i].x.number(), points[i].y.number()})
 	}
 	return orderedPoints
 }
@@ -283,7 +285,7 @@ func (po *polyOut) getGeom() [][][]float64 {
 	}
 	geom := [][][]float64{po.exteriorRing.getGeom()}
 	// exterior ring was all (within rounding error of angle calc) colinear points
-	if geom == nil {
+	if len(geom) == 0 {
 		return nil
 	}
 	if geom[0] == nil {

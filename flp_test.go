@@ -3,45 +3,47 @@ package polygol
 import "testing"
 
 func TestFlpCompare(t *testing.T) {
-	var a, b float64
+	setPrecision(NumberEPSILON)
 
+	var a, b BigNumber
 	// exactly equal
-	a = 1
-	b = 1
-	expect(t, flpCmp(a, b) == 0)
+	a = newBigNumber(1)
+	b = newBigNumber(1)
+	expect(t, compare(a, b) == 0)
 
 	// flp equal
-	a = 1
-	b = 1 + epsilon
-	expect(t, flpCmp(a, b) == 0)
+	a = newBigNumber(1)
+	b = newBigNumber(1).plus(newBigNumber(NumberEPSILON))
+	expect(t, compare(a, b) == 0)
 
 	// barely less than
-	a = 1
-	b = 1 + epsilon*2
-	expect(t, flpCmp(a, b) == -1)
+	a = newBigNumber(1)
+	b = newBigNumber(1).plus(newBigNumber(NumberEPSILON).times(newBigNumber(2)))
+	expect(t, compare(a, b) == -1)
 
 	// less than
-	a = 1
-	b = 2
-	expect(t, flpCmp(a, b) == -1)
+	a = newBigNumber(1)
+	b = newBigNumber(2)
+	expect(t, compare(a, b) == -1)
 
 	// barely more than
-	a = 1 + epsilon*2
-	b = 1
-	expect(t, flpCmp(a, b) == 1)
+	a = newBigNumber(1).plus(newBigNumber(NumberEPSILON).times(newBigNumber(2)))
+	b = newBigNumber(1)
+	expect(t, compare(a, b) == 1)
 
 	// more than
-	a = 2
-	b = 1
-	expect(t, flpCmp(a, b) == 1)
+	a = newBigNumber(2)
+	b = newBigNumber(1)
+	expect(t, compare(a, b) == 1)
 
 	// both flp equal to 0
-	a = 0.0
-	b = epsilon - epsilon*epsilon
-	expect(t, flpCmp(a, b) == 0)
+	a = bigZero()
+	b = newBigNumber(NumberEPSILON).minus(newBigNumber(NumberEPSILON).times(newBigNumber(NumberEPSILON)))
+	expect(t, compare(a, b) == 0)
 
 	// really close to 0
-	a = epsilon
-	b = epsilon + epsilon*epsilon*2
-	expect(t, flpCmp(a, b) == -1)
+	a = newBigNumber(NumberEPSILON)
+	b = newBigNumber(NumberEPSILON).plus(newBigNumber(NumberEPSILON).times(newBigNumber(NumberEPSILON)).times(newBigNumber(2)))
+	expect(t, compare(a, b) == 0)
+	resetPrecision()
 }

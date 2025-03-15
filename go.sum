@@ -1,2 +1,6 @@
+github.com/cockroachdb/apd/v3 v3.2.1 h1:U+8j7t0axsIgvQUqthuNm82HIrYXodOV2iWLWtEaIwg=
+github.com/cockroachdb/apd/v3 v3.2.1/go.mod h1:klXJcjp+FffLTHlhIG69tezTDvdP065naDsHzKhYSqc=
 github.com/engelsjk/splay-tree v0.0.1 h1:9jWYhlLxSTubl8+Lgk/4mSe8iMQITwbRu+eVMkNTsUM=
 github.com/engelsjk/splay-tree v0.0.1/go.mod h1:5TalkXJDy1DjM0Dj1g4WcZ5bn1Y3YwUnPYH+XWtAXFY=
+github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
+github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=

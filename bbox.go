@@ -1,48 +1,49 @@
 package polygol
 
-type bbox struct {
-	ll point
-	ur point
+type Bbox struct {
+	ll Vector
+	ur Vector
 }
 
-func (b bbox) isInBbox(point point) bool {
-	return b.ll.x <= point.x &&
-		point.x <= b.ur.x &&
-		b.ll.y <= point.y &&
-		point.y <= b.ur.y
+func (bbox Bbox) isInBbox(point Vector) bool {
+	return bbox.ll.x.isLessThanOrEqualTo(point.x) &&
+		point.x.isLessThanOrEqualTo(bbox.ur.x) &&
+		bbox.ll.y.isLessThanOrEqualTo(point.y) &&
+		point.y.isLessThanOrEqualTo(bbox.ur.y)
+
 }
 
-func (b bbox) getBboxOverlap(ob bbox) *bbox {
+func (b1 Bbox) getBboxOverlap(b2 Bbox) *Bbox {
 	// check if the bboxes overlap at all
-	if ob.ur.x < b.ll.x ||
-		b.ur.x < ob.ll.x ||
-		ob.ur.y < b.ll.y ||
-		b.ur.y < ob.ll.y {
+	if b2.ur.x.isLessThan(b1.ll.x) ||
+		b1.ur.x.isLessThan(b2.ll.x) ||
+		b2.ur.y.isLessThan(b1.ll.y) ||
+		b1.ur.y.isLessThan(b2.ll.y) {
 		return nil
 	}
 
 	// find the middle two X values
-	lowerX := b.ll.x
-	if b.ll.x < ob.ll.x {
-		lowerX = ob.ll.x
+	lowerX := b1.ll.x
+	if b1.ll.x.isLessThan(b2.ll.x) {
+		lowerX = b2.ll.x
 	}
-	upperX := ob.ur.x
-	if b.ur.x < ob.ur.x {
-		upperX = b.ur.x
+	upperX := b2.ur.x
+	if b1.ur.x.isLessThan(b2.ur.x) {
+		upperX = b1.ur.x
 	}
 
 	// find the middle two Y values
-	lowerY := b.ll.y
-	if b.ll.y < ob.ll.y {
-		lowerY = ob.ll.y
+	lowerY := b1.ll.y
+	if b1.ll.y.isLessThan(b2.ll.y) {
+		lowerY = b2.ll.y
 	}
-	upperY := ob.ur.y
-	if b.ur.y < ob.ur.y {
-		upperY = b.ur.y
+	upperY := b2.ur.y
+	if b1.ur.y.isLessThan(b2.ur.y) {
+		upperY = b1.ur.y
 	}
 
-	return &bbox{
-		ll: point{x: lowerX, y: lowerY},
-		ur: point{x: upperX, y: upperY},
+	return &Bbox{
+		ll: Vector{x: lowerX, y: lowerY},
+		ur: Vector{x: upperX, y: upperY},
 	}
 }

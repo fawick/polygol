@@ -2,23 +2,22 @@ package polygol
 
 import (
 	"fmt"
-	"math"
 )
 
 type ringIn struct {
 	poly       *polyIn
 	isExterior bool
 	segments   []*segment
-	bbox       bbox
+	bbox       Bbox
 }
 
 func (o *operation) newRingIn(ring [][]float64, poly *polyIn, isExterior bool) (*ringIn, error) {
 
 	if len(ring) == 0 {
-		return nil, fmt.Errorf(`Input geometry is not a valid polygon or multipolygon (empty).`)
+		return nil, fmt.Errorf(`input geometry is not a valid polygon or multipolygon (empty)`)
 	}
 	if len(ring[0]) < 2 {
-		return nil, fmt.Errorf(`Input geometry is not a valid polygon or multipolygon (empty).`)
+		return nil, fmt.Errorf(`input geometry is not a valid polygon or multipolygon (empty)`)
 	}
 
 	ri := &ringIn{}
@@ -27,21 +26,21 @@ func (o *operation) newRingIn(ring [][]float64, poly *polyIn, isExterior bool) (
 	ri.isExterior = isExterior
 	ri.segments = []*segment{}
 
-	firstPoint := o.rounder.round(ring[0][0], ring[0][1])
+	firstPoint := o.rounder.roundFloat(ring[0][0], ring[0][1])
 
-	ri.bbox = bbox{ll: *firstPoint, ur: *firstPoint}
+	ri.bbox = Bbox{ll: firstPoint.Vector, ur: firstPoint.Vector}
 
 	prevPoint := firstPoint
 	for i := 1; i < len(ring); i++ {
 
 		if len(ring[i]) < 2 {
-			return nil, fmt.Errorf(`Input geometry is not a valid polygon or multipolygon (missing coordinates).`)
+			return nil, fmt.Errorf(`input geometry is not a valid polygon or multipolygon (missing coordinates)`)
 		}
 
-		point := o.rounder.round(ring[i][0], ring[i][1])
+		point := o.rounder.roundFloat(ring[i][0], ring[i][1])
 
 		// skip repeated points
-		if point.x == prevPoint.x && point.y == prevPoint.y {
+		if point.x.equalTo(prevPoint.x) && point.y.equalTo(prevPoint.y) {
 			continue
 		}
 
@@ -51,22 +50,22 @@ func (o *operation) newRingIn(ring [][]float64, poly *polyIn, isExterior bool) (
 		}
 		ri.segments = append(ri.segments, segment)
 
-		if point.x < ri.bbox.ll.x {
+		if point.x.isLessThan(ri.bbox.ll.x) {
 			ri.bbox.ll.x = point.x
 		}
-		if point.y < ri.bbox.ll.y {
+		if point.y.isLessThan(ri.bbox.ll.y) {
 			ri.bbox.ll.y = point.y
 		}
-		if point.x > ri.bbox.ur.x {
+		if point.x.isGreaterThan(ri.bbox.ur.x) {
 			ri.bbox.ur.x = point.x
 		}
-		if point.y > ri.bbox.ur.y {
+		if point.y.isGreaterThan(ri.bbox.ur.y) {
 			ri.bbox.ur.y = point.y
 		}
 		prevPoint = point
 	}
 	// add segment from last to first if last is not the same as first
-	if firstPoint.x != prevPoint.x || firstPoint.y != prevPoint.y {
+	if firstPoint.x.notEqualTo(prevPoint.x) || firstPoint.y.notEqualTo(prevPoint.y) {
 		segment, err := o.newSegmentFromRing(prevPoint, firstPoint, ri)
 		if err != nil {
 			return nil, err
@@ -101,13 +100,13 @@ type polyIn struct {
 	multiPoly     *multiPolyIn
 	exteriorRing  *ringIn
 	interiorRings []*ringIn
-	bbox          bbox
+	bbox          Bbox
 }
 
 func (o *operation) newPolyIn(poly [][][]float64, multiPoly *multiPolyIn) (*polyIn, error) {
 
 	if len(poly) == 0 {
-		return nil, fmt.Errorf(`Input geometry is not a valid polygon or multipolygon (empty).`)
+		return nil, fmt.Errorf(`tnput geometry is not a valid polygon or multipolygon (empty)`)
 	}
 
 	pi := &polyIn{}
@@ -126,16 +125,16 @@ func (o *operation) newPolyIn(poly [][][]float64, multiPoly *multiPolyIn) (*poly
 		if err != nil {
 			return nil, err
 		}
-		if ring.bbox.ll.x < pi.bbox.ll.x {
+		if ring.bbox.ll.x.isLessThan(pi.bbox.ll.x) {
 			pi.bbox.ll.x = ring.bbox.ll.x
 		}
-		if ring.bbox.ll.y < pi.bbox.ll.y {
+		if ring.bbox.ll.y.isLessThan(pi.bbox.ll.y) {
 			pi.bbox.ll.y = ring.bbox.ll.y
 		}
-		if ring.bbox.ur.x > pi.bbox.ur.x {
+		if ring.bbox.ur.x.isGreaterThan(pi.bbox.ur.x) {
 			pi.bbox.ur.x = ring.bbox.ur.x
 		}
-		if ring.bbox.ur.y > pi.bbox.ur.y {
+		if ring.bbox.ur.y.isGreaterThan(pi.bbox.ur.y) {
 			pi.bbox.ur.y = ring.bbox.ur.y
 		}
 		pi.interiorRings = append(pi.interiorRings, ring)
@@ -167,7 +166,7 @@ func (pi *polyIn) indexOf(polyIns []*polyIn) int {
 
 type multiPolyIn struct {
 	polys     []*polyIn
-	bbox      bbox
+	bbox      Bbox
 	isSubject bool
 }
 
@@ -176,9 +175,9 @@ func (o *operation) newMultiPolyIn(multiPoly [][][][]float64, isSubject bool) (*
 	mpi := &multiPolyIn{}
 
 	mpi.polys = []*polyIn{}
-	mpi.bbox = bbox{
-		ll: point{x: math.Inf(1), y: math.Inf(1)},
-		ur: point{x: math.Inf(-1), y: math.Inf(-1)},
+	mpi.bbox = Bbox{
+		ll: Vector{x: bigInf(false), y: bigInf(false)},
+		ur: Vector{x: bigInf(true), y: bigInf(true)},
 	}
 
 	for i := 0; i < len(multiPoly); i++ {
@@ -186,16 +185,16 @@ func (o *operation) newMultiPolyIn(multiPoly [][][][]float64, isSubject bool) (*
 		if err != nil {
 			return nil, err
 		}
-		if poly.bbox.ll.x < mpi.bbox.ll.x {
+		if poly.bbox.ll.x.isLessThan(mpi.bbox.ll.x) {
 			mpi.bbox.ll.x = poly.bbox.ll.x
 		}
-		if poly.bbox.ll.y < mpi.bbox.ll.y {
+		if poly.bbox.ll.y.isLessThan(mpi.bbox.ll.y) {
 			mpi.bbox.ll.y = poly.bbox.ll.y
 		}
-		if poly.bbox.ur.x > mpi.bbox.ur.x {
+		if poly.bbox.ur.x.isGreaterThan(mpi.bbox.ur.x) {
 			mpi.bbox.ur.x = poly.bbox.ur.x
 		}
-		if poly.bbox.ur.y > mpi.bbox.ur.y {
+		if poly.bbox.ur.y.isGreaterThan(mpi.bbox.ur.y) {
 			mpi.bbox.ur.y = poly.bbox.ur.y
 		}
 		mpi.polys = append(mpi.polys, poly)

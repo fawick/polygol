@@ -4,13 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"testing"
-
-	geojson "github.com/engelsjk/polygol/geojson"
 )
 
 const (
@@ -34,13 +31,16 @@ type testCase struct {
 }
 
 func TestEndToEnd(t *testing.T) {
-
 	targets, err := ioutil.ReadDir(endToEndDir)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	for _, target := range targets {
+
+		if targetOnly != "" && target.Name() != targetOnly {
+			continue
+		}
 
 		if contains(targetsSkip, target.Name()) {
 			fmt.Printf("skipping target %s...\n", target.Name())
@@ -113,7 +113,7 @@ func TestEndToEnd(t *testing.T) {
 
 			t.Run(testCase.Name, func(t *testing.T) {
 
-				t.Parallel() // run all end-to-end tests in parallel
+				// t.Parallel() // run all end-to-end tests in parallel
 
 				if contains(opsSkip, testCase.OperationType) {
 					fmt.Printf("skipping op type %s...\n", testCase.OperationType)
@@ -127,11 +127,17 @@ func TestEndToEnd(t *testing.T) {
 				expected := geoms[0]
 
 				result, err := newOperation(testCase.OperationType).run(args[0], args[1:]...)
+				resetPrecision()
 				if err != nil {
 					t.Error(err)
 				}
+				same := equalMultiPoly(expected, result)
+				if !same {
+					// d, _ := diff.Diff(expected, result)
+					// t.Fatal(d)
+					t.Fatal("resulting geometry does not match expectations")
 
-				expect(t, equalMultiPoly(expected, result))
+				}
 			})
 		}
 	}
@@ -144,51 +150,4 @@ func contains(s []string, str string) bool {
 		}
 	}
 	return false
-}
-
-func loadGeoms(filepath string) ([]Geom, error) {
-
-	fmt.Println(filepath)
-	f, err := os.Open(filepath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	b, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, err
-	}
-
-	newFeatures := unmarshalFeatureOrFeatureCollection(b)
-
-	geoms := make([]Geom, len(newFeatures))
-	for i := range newFeatures {
-		fg := newFeatures[i].Geometry
-		switch fg.Type {
-		case "Polygon":
-			geoms[i] = Geom{fg.Polygon}
-		case "MultiPolygon":
-			geoms[i] = fg.MultiPolygon
-		default:
-			return nil, fmt.Errorf("only polygon or multipolygon geometry types supported")
-		}
-	}
-
-	return geoms, nil
-}
-
-func unmarshalFeatureOrFeatureCollection(b []byte) []*geojson.Feature {
-	feature, err := geojson.UnmarshalFeature(b)
-	if err != nil {
-		return nil
-	}
-	if feature.Type != "FeatureCollection" {
-		return []*geojson.Feature{feature}
-	}
-	fc, err := geojson.UnmarshalFeatureCollection(b)
-	if err != nil {
-		return nil
-	}
-	return fc.Features
 }

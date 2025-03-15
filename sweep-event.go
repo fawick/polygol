@@ -14,7 +14,7 @@ type sweepEvent struct {
 }
 
 type angles struct {
-	sine, cosine float64
+	sine, cosine BigNumber
 }
 
 func newSweepEvent(point *point, isLeft bool) *sweepEvent {
@@ -62,16 +62,29 @@ func sweepEventCompare(a, b interface{}) int {
 }
 
 func sweepEventComparePoints(aPt, bPt *point) int {
-	cmpX := flpCmp(aPt.x, bPt.x)
-	if cmpX != 0 {
-		return cmpX
+	if aPt.x.isLessThan(bPt.x) {
+		return -1
 	}
-	return flpCmp(aPt.y, bPt.y)
+	if aPt.x.isGreaterThan(bPt.x) {
+		return 1
+	}
+	if aPt.y.isLessThan(bPt.y) {
+		return -1
+	}
+	if aPt.y.isGreaterThan(bPt.y) {
+		return 1
+	}
+	return 0
+	// cmpX := aPt.x.Cmp(bPt.x)
+	// if cmpX != 0 {
+	// 	return cmpX
+	// }
+	// return aPt.y.Cmp(bPt.y)
 }
 
 func (se *sweepEvent) link(other *sweepEvent) error {
 	if other.point == se.point {
-		return errors.New("Tried to link already linked events.")
+		return errors.New("tried to link already linked events")
 	}
 	otherEvents := other.point.events
 	for i := 0; i < len(otherEvents); i++ {
@@ -106,8 +119,8 @@ func (se *sweepEvent) checkForConsuming() {
 				continue
 			}
 
-			if !equalSweepEvents(evt1.otherSE.point.events, evt2.otherSE.point.events) { // more correct? or not
-				// if &(evt1.otherSE.point.events) != &(evt2.otherSE.point.events) {
+			// if !equalSweepEvents(evt1.otherSE.point.events, evt2.otherSE.point.events) { // more correct? or not
+			if &(evt1.otherSE.point.events) != &(evt2.otherSE.point.events) {
 				continue
 			}
 			evt1.segment.consume(evt2.segment)
@@ -136,8 +149,8 @@ func (se *sweepEvent) getLeftMostComparator(baseEvent *sweepEvent) func(a, b *sw
 	fillCache := func(linkedEvent *sweepEvent) {
 		nextEvent := linkedEvent.otherSE
 		cache[linkedEvent] = angles{
-			sine:   sineOfAngle(se.point.xy(), baseEvent.point.xy(), nextEvent.point.xy()),
-			cosine: cosineOfAngle(se.point.xy(), baseEvent.point.xy(), nextEvent.point.xy()),
+			sine:   sineOfAngle(se.point.vector(), baseEvent.point.vector(), nextEvent.point.vector()),
+			cosine: cosineOfAngle(se.point.vector(), baseEvent.point.vector(), nextEvent.point.vector()),
 		}
 	}
 
@@ -152,32 +165,32 @@ func (se *sweepEvent) getLeftMostComparator(baseEvent *sweepEvent) func(a, b *sw
 		bb := cache[b]
 
 		// both on or above x-axis
-		if aa.sine >= 0 && bb.sine >= 0 {
-			if aa.cosine < bb.cosine {
+		if aa.sine.isGreaterThanOrEqualTo(bigZero()) && bb.sine.isGreaterThanOrEqualTo(bigZero()) {
+			if aa.cosine.isLessThan(bb.cosine) {
 				return 1
 			}
-			if aa.cosine > bb.cosine {
+			if aa.cosine.isGreaterThan(bb.cosine) {
 				return -1
 			}
 			return 0
 		}
 
 		// both below x-axis
-		if aa.sine < 0 && bb.sine < 0 {
-			if aa.cosine < bb.cosine {
+		if aa.sine.isLessThan(bigZero()) && bb.sine.isLessThan(bigZero()) {
+			if aa.cosine.isLessThan(bb.cosine) {
 				return -1
 			}
-			if aa.cosine > bb.cosine {
+			if aa.cosine.isGreaterThan(bb.cosine) {
 				return 1
 			}
 			return 0
 		}
 
 		// one above x-axis, one below
-		if bb.sine < aa.sine {
+		if bb.sine.isLessThan(aa.sine) {
 			return -1
 		}
-		if bb.sine > aa.sine {
+		if bb.sine.isGreaterThan(aa.sine) {
 			return 1
 		}
 		return 0

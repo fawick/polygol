@@ -44,7 +44,7 @@ func equalRing(r1, r2 [][]float64) bool {
 			return false
 		}
 		for j := range pt {
-			if math.Abs(pt[j]-r2[i][j]) > epsilon {
+			if math.Abs(pt[j]-r2[i][j]) > NumberEPSILON {
 				return false
 			}
 		}
@@ -54,7 +54,7 @@ func equalRing(r1, r2 [][]float64) bool {
 
 // ring
 func TestGeomOutRingSimpleTriangle(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// simple triangle
 
@@ -81,7 +81,7 @@ func TestGeomOutRingSimpleTriangle(t *testing.T) {
 }
 
 func TestGeomOutRingBowTie(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// bow tie
 
@@ -128,7 +128,7 @@ func TestGeomOutRingBowTie(t *testing.T) {
 }
 
 func TestGeomOutRingRinged(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// ring ringed
 
@@ -179,16 +179,16 @@ func TestGeomOutRingRinged(t *testing.T) {
 }
 
 func TestGeomOutRingRingedInterior(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// ringed ring interior ring starting point extraneous
 
 	op := newOperation("")
 
-	p1 := &point{x: 0, y: 0}
-	p2 := &point{x: 5, y: -5}
-	p3 := &point{x: 4, y: 0}
-	p4 := &point{x: 5, y: 5}
+	p1 := newPoint(0, 0)
+	p2 := newPoint(5, -5)
+	p3 := newPoint(4, 0)
+	p4 := newPoint(5, 5)
 
 	seg1, err := op.newSegmentFromRing(p1, p2, &ringIn{})
 	terr(t, err)
@@ -199,10 +199,10 @@ func TestGeomOutRingRingedInterior(t *testing.T) {
 	seg4, err := op.newSegmentFromRing(p4, p1, &ringIn{})
 	terr(t, err)
 
-	p5 := &point{x: 1, y: 0}
-	p6 := &point{x: 4, y: 1}
+	p5 := newPoint(1, 0)
+	p6 := newPoint(4, 1)
 	p7 := p3
-	p8 := &point{x: 4, y: -1}
+	p8 := newPoint(4, -1)
 
 	seg5, err := op.newSegmentFromRing(p5, p6, &ringIn{})
 	terr(t, err)
@@ -234,16 +234,16 @@ func TestGeomOutRingRingedInterior(t *testing.T) {
 }
 
 func TestGeomOutRingRingedBowTie(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// ringed ring and bow tie at same point
 
 	op := newOperation("")
 
-	p1 := &point{x: 0, y: 0}
-	p2 := &point{x: 3, y: -3}
-	p3 := &point{x: 3, y: 0}
-	p4 := &point{x: 3, y: 3}
+	p1 := newPoint(0, 0)
+	p2 := newPoint(3, -3)
+	p3 := newPoint(3, 0)
+	p4 := newPoint(3, 3)
 
 	seg1, err := op.newSegmentFromRing(p1, p2, &ringIn{})
 	terr(t, err)
@@ -254,9 +254,9 @@ func TestGeomOutRingRingedBowTie(t *testing.T) {
 	seg4, err := op.newSegmentFromRing(p4, p1, &ringIn{})
 	terr(t, err)
 
-	p5 := &point{x: 2, y: -1}
+	p5 := newPoint(2, -1)
 	p6 := p3
-	p7 := &point{x: 2, y: 1}
+	p7 := newPoint(2, 1)
 
 	seg5, err := op.newSegmentFromRing(p5, p6, &ringIn{})
 	terr(t, err)
@@ -266,8 +266,8 @@ func TestGeomOutRingRingedBowTie(t *testing.T) {
 	terr(t, err)
 
 	p8 := p3
-	p9 := &point{x: 4, y: -1}
-	p10 := &point{x: 4, y: 1}
+	p9 := newPoint(4, -1)
+	p10 := newPoint(4, 1)
 
 	seg8, err := op.newSegmentFromRing(p8, p9, &ringIn{})
 	terr(t, err)
@@ -300,15 +300,15 @@ func TestGeomOutRingRingedBowTie(t *testing.T) {
 }
 
 func TestGeomOutRingDoubleBowTie(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// double bow tie
 
 	op := newOperation("")
 
-	p1 := &point{x: 0, y: 0}
-	p2 := &point{x: 1, y: -2}
-	p3 := &point{x: 1, y: 2}
+	p1 := newPoint(0, 0)
+	p2 := newPoint(1, -2)
+	p3 := newPoint(1, 2)
 
 	seg1, err := op.newSegmentFromRing(p1, p2, &ringIn{})
 	terr(t, err)
@@ -318,8 +318,8 @@ func TestGeomOutRingDoubleBowTie(t *testing.T) {
 	terr(t, err)
 
 	p4 := p2
-	p5 := &point{x: 2, y: -3}
-	p6 := &point{x: 2, y: -1}
+	p5 := newPoint(2, -3)
+	p6 := newPoint(2, -1)
 
 	seg4, err := op.newSegmentFromRing(p4, p5, &ringIn{})
 	terr(t, err)
@@ -329,8 +329,8 @@ func TestGeomOutRingDoubleBowTie(t *testing.T) {
 	terr(t, err)
 
 	p7 := p3
-	p8 := &point{x: 2, y: 1}
-	p9 := &point{x: 2, y: 3}
+	p8 := newPoint(2, 1)
+	p9 := newPoint(2, 3)
 
 	seg7, err := op.newSegmentFromRing(p7, p8, &ringIn{})
 	terr(t, err)
@@ -362,15 +362,15 @@ func TestGeomOutRingDoubleBowTie(t *testing.T) {
 }
 
 func TestGeomOutRingDoubleRinged(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// double ringed ring
 
 	op := newOperation("")
 
-	p1 := &point{x: 0, y: 0}
-	p2 := &point{x: 5, y: -5}
-	p3 := &point{x: 5, y: 5}
+	p1 := newPoint(0, 0)
+	p2 := newPoint(5, -5)
+	p3 := newPoint(5, 5)
 
 	seg1, err := op.newSegmentFromRing(p1, p2, &ringIn{})
 	terr(t, err)
@@ -379,9 +379,9 @@ func TestGeomOutRingDoubleRinged(t *testing.T) {
 	seg3, err := op.newSegmentFromRing(p3, p1, &ringIn{})
 	terr(t, err)
 
-	p4 := &point{x: 1, y: -1}
+	p4 := newPoint(1, -1)
 	p5 := p2
-	p6 := &point{x: 2, y: -1}
+	p6 := newPoint(2, -1)
 
 	seg4, err := op.newSegmentFromRing(p4, p5, &ringIn{})
 	terr(t, err)
@@ -390,9 +390,9 @@ func TestGeomOutRingDoubleRinged(t *testing.T) {
 	seg6, err := op.newSegmentFromRing(p6, p4, &ringIn{})
 	terr(t, err)
 
-	p7 := &point{x: 1, y: 1}
+	p7 := newPoint(1, 1)
 	p8 := p3
-	p9 := &point{x: 2, y: 1}
+	p9 := newPoint(2, 1)
 
 	seg7, err := op.newSegmentFromRing(p7, p8, &ringIn{})
 	terr(t, err)
@@ -424,15 +424,15 @@ func TestGeomOutRingDoubleRinged(t *testing.T) {
 }
 
 func TestGeomOutRingMalformed(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// errors on on malformed ring
 
 	op := newOperation("")
 
-	p1 := &point{x: 0, y: 0}
-	p2 := &point{x: 1, y: 1}
-	p3 := &point{x: 0, y: 1}
+	p1 := newPoint(0, 0)
+	p2 := newPoint(1, 1)
+	p3 := newPoint(0, 1)
 
 	seg1, err := op.newSegmentFromRing(p1, p2, &ringIn{})
 	terr(t, err)
@@ -450,15 +450,15 @@ func TestGeomOutRingMalformed(t *testing.T) {
 }
 
 func TestGeomOutRingExterior(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// exterior ring
 
 	op := newOperation("")
 
-	p1 := &point{x: 0, y: 0}
-	p2 := &point{x: 1, y: 1}
-	p3 := &point{x: 0, y: 1}
+	p1 := newPoint(0, 0)
+	p2 := newPoint(1, 1)
+	p3 := newPoint(0, 1)
 
 	seg1, err := op.newSegmentFromRing(p1, p2, &ringIn{})
 	terr(t, err)
@@ -482,15 +482,15 @@ func TestGeomOutRingExterior(t *testing.T) {
 }
 
 func TestGeomOutRingInteriorReverse(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// interior ring points reversed
 
 	op := newOperation("")
 
-	p1 := &point{x: 0, y: 0}
-	p2 := &point{x: 1, y: 1}
-	p3 := &point{x: 0, y: 1}
+	p1 := newPoint(0, 0)
+	p2 := newPoint(1, 1)
+	p3 := newPoint(0, 1)
 
 	seg1, err := op.newSegmentFromRing(p1, p2, &ringIn{})
 	terr(t, err)
@@ -514,16 +514,16 @@ func TestGeomOutRingInteriorReverse(t *testing.T) {
 }
 
 func TestGeomOutRingRemoveColinearPoints(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// removes colinear points successfully
 
 	op := newOperation("")
 
-	p1 := &point{x: 0, y: 0}
-	p2 := &point{x: 1, y: 1}
-	p3 := &point{x: 2, y: 2}
-	p4 := &point{x: 0, y: 2}
+	p1 := newPoint(0, 0)
+	p2 := newPoint(1, 1)
+	p3 := newPoint(2, 2)
+	p4 := newPoint(0, 2)
 
 	seg1, err := op.newSegmentFromRing(p1, p2, &ringIn{})
 	terr(t, err)
@@ -548,17 +548,18 @@ func TestGeomOutRingRemoveColinearPoints(t *testing.T) {
 }
 
 func TestGeomOutRingAlmostEqualPoint(t *testing.T) {
-	t.Parallel()
+	setPrecision(1e-9)
+	// t.Parallel()
 
 	// almost equal point handled ok
 	// points harvested from https://github.com/mfogel/polygon-clipping/issues/37
 
 	op := newOperation("")
 
-	p1 := &point{x: 0.523985, y: 51.281651}
-	p2 := &point{x: 0.5241, y: 51.2816}
-	p3 := &point{x: 0.5240213684210527, y: 51.2816873684210}
-	p4 := &point{x: 0.5239850000000027, y: 51.281651000000004}
+	p1 := newPoint(0.523985, 51.281651)
+	p2 := newPoint(0.5241, 51.2816)
+	p3 := newPoint(0.5240213684210527, 51.2816873684210)
+	p4 := newPoint(0.5239850000000027, 51.281651000000004)
 
 	seg1, err := op.newSegmentFromRing(p1, p2, &ringIn{})
 	terr(t, err)
@@ -582,22 +583,23 @@ func TestGeomOutRingAlmostEqualPoint(t *testing.T) {
 	expect(t, equalRing(ring.getGeom(), [][]float64{
 		{0.523985, 51.281651},
 		{0.5241, 51.2816},
-		{0.5240213684210527, 51.2816873684210},
+		{0.5240213684210527, 51.281687368421},
 		{0.523985, 51.281651}},
 	))
+	resetPrecision()
 }
 
 func TestGeomOutRingWithColinearPoints(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// ring with all colinear points returns null
 
 	op := newOperation("")
 
-	p1 := &point{x: 0, y: 0}
-	p2 := &point{x: 1, y: 1}
-	p3 := &point{x: 2, y: 2}
-	p4 := &point{x: 3, y: 3}
+	p1 := newPoint(0, 0)
+	p2 := newPoint(1, 1)
+	p3 := newPoint(2, 2)
+	p4 := newPoint(3, 3)
 
 	seg1, err := op.newSegmentFromRing(p1, p2, &ringIn{})
 	terr(t, err)
@@ -623,7 +625,7 @@ func TestGeomOutRingWithColinearPoints(t *testing.T) {
 
 // poly
 func TestGeomOutPolyBasic(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// basic
 
@@ -653,7 +655,7 @@ func TestGeomOutPolyBasic(t *testing.T) {
 }
 
 func TestGeomOutPolyColinearExteriorRing(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// has all colinear exterior ring
 
@@ -668,7 +670,7 @@ func TestGeomOutPolyColinearExteriorRing(t *testing.T) {
 }
 
 func TestGeomOutPolyColinearInteriorRing(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// has all colinear interior ring
 
@@ -697,7 +699,7 @@ func TestGeomOutPolyColinearInteriorRing(t *testing.T) {
 }
 
 func TestGeomOutMultiPolyBasic(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// basic
 
@@ -716,7 +718,7 @@ func TestGeomOutMultiPolyBasic(t *testing.T) {
 }
 
 func TestGeomOutMultiPolyColinearExteriorRing(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	// has poly with all colinear exterior ring
 

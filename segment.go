@@ -56,10 +56,10 @@ func segmentCompare(a, b interface{}) int {
 	brx := bSeg.rightSE.point.x
 
 	// check if they're even in the same vertical plane
-	if brx < alx {
+	if brx.isLessThan(alx) {
 		return 1
 	}
-	if arx < blx {
+	if arx.isLessThan(blx) {
 		return -1
 	}
 
@@ -69,13 +69,13 @@ func segmentCompare(a, b interface{}) int {
 	bry := bSeg.rightSE.point.y
 
 	// is left endpoint of segment B the right-more?
-	if alx < blx {
+	if alx.isLessThan(blx) {
 
 		// are the two segments in the same horizontal plane?
-		if bly < aly && bly < ary {
+		if bly.isLessThan(aly) && bly.isLessThan(ary) {
 			return 1
 		}
-		if bly > aly && bly > ary {
+		if bly.isGreaterThan(aly) && bly.isGreaterThan(ary) {
 			return -1
 		}
 
@@ -100,12 +100,12 @@ func segmentCompare(a, b interface{}) int {
 	}
 
 	// is left endpoint of segment A the right-more?
-	if alx > blx {
+	if alx.isGreaterThan(blx) {
 
-		if aly < bly && aly < bry {
+		if aly.isLessThan(bly) && aly.isLessThan(bry) {
 			return -1
 		}
-		if aly > bly && aly > bry {
+		if aly.isGreaterThan(bly) && aly.isGreaterThan(bry) {
 			return 1
 		}
 
@@ -133,10 +133,10 @@ func segmentCompare(a, b interface{}) int {
 	// vertical plane, ie alx === blx
 
 	// consider the lower left-endpoint to come first
-	if aly < bly {
+	if aly.isLessThan(bly) {
 		return -1
 	}
-	if aly > bly {
+	if aly.isGreaterThan(bly) {
 		return 1
 	}
 
@@ -144,7 +144,7 @@ func segmentCompare(a, b interface{}) int {
 	// check for colinearity by using the left-more right endpoint
 
 	// is the A right endpoint more left-more?
-	if arx < brx {
+	if arx.isLessThan(brx) {
 		bCmpARight := bSeg.comparePoint(aSeg.rightSE.point)
 		if bCmpARight != 0 {
 			return bCmpARight
@@ -152,7 +152,7 @@ func segmentCompare(a, b interface{}) int {
 	}
 
 	// is the B right endpoint more left-more?
-	if arx > brx {
+	if arx.isGreaterThan(brx) {
 		aCmpBRight := aSeg.comparePoint(bSeg.rightSE.point)
 		if aCmpBRight < 0 {
 			return 1
@@ -162,27 +162,27 @@ func segmentCompare(a, b interface{}) int {
 		}
 	}
 
-	if arx != brx {
+	if !arx.equalTo(brx) {
 		// are these two [almost] vertical segments with opposite orientation?
 		// if so, the one with the lower right endpoint comes first
-		ay := ary - aly
-		ax := arx - alx
-		by := bry - bly
-		bx := brx - blx
-		if ay > ax && by < bx {
+		ay := ary.minus(aly)
+		ax := arx.minus(alx)
+		by := bry.minus(bly)
+		bx := brx.minus(blx)
+		if ay.isGreaterThan(ax) && by.isLessThan(bx) {
 			return 1
 		}
-		if ay < ax && by > bx {
+		if ay.isLessThan(ax) && by.isGreaterThan(bx) {
 			return -1
 		}
 	}
 
 	// we have colinear segments with matching orientation
 	// consider the one with more left-more right endpoint to be first
-	if arx > brx {
+	if arx.isGreaterThan(brx) {
 		return 1
 	}
-	if arx < brx {
+	if arx.isLessThan(brx) {
 		return -1
 	}
 
@@ -190,10 +190,10 @@ func segmentCompare(a, b interface{}) int {
 	// vertical plane, ie arx === brx
 
 	// consider the lower right-endpoint to come first
-	if ary < bry {
+	if ary.isLessThan(bry) {
 		return -1
 	}
-	if ary > bry {
+	if ary.isGreaterThan(bry) {
 		return 1
 	}
 
@@ -224,7 +224,7 @@ func (o *operation) newSegmentFromRing(pt1, pt2 *point, ring *ringIn) (*segment,
 		rightPt = pt1
 		winding = -1
 	} else {
-		return nil, fmt.Errorf("Tried to create degenerate segment at [%f,%f].", pt1.x, pt1.y)
+		return nil, fmt.Errorf("tried to create degenerate segment at [%f,%f].", pt1.x.number(), pt1.y.number())
 	}
 
 	leftSE := newSweepEvent(leftPt, true)
@@ -240,31 +240,31 @@ func (s *segment) replaceRightSE(newRightSE *sweepEvent) {
 	s.leftSE.otherSE = s.rightSE
 }
 
-func (s *segment) bbox() bbox {
+func (s *segment) bbox() Bbox {
 
 	y1 := s.leftSE.point.y
 	y2 := s.rightSE.point.y
 
 	lly := y2
-	if y1 < y2 {
+	if y1.isLessThan(y2) {
 		lly = y1
 	}
 
 	ury := y2
-	if y1 > y2 {
+	if y1.isGreaterThan(y2) {
 		ury = y1
 	}
 
-	return bbox{
-		ll: point{x: s.leftSE.point.x, y: lly},
-		ur: point{x: s.rightSE.point.x, y: ury},
+	return Bbox{
+		ll: Vector{x: s.leftSE.point.x, y: lly},
+		ur: Vector{x: s.rightSE.point.x, y: ury},
 	}
 }
 
-func (s *segment) vector() []float64 {
-	return []float64{
-		s.rightSE.point.x - s.leftSE.point.x,
-		s.rightSE.point.y - s.leftSE.point.y,
+func (s *segment) vector() Vector {
+	return Vector{
+		x: s.rightSE.point.x.minus(s.leftSE.point.x),
+		y: s.rightSE.point.y.minus(s.leftSE.point.y),
 	}
 }
 
@@ -275,8 +275,8 @@ func (s *segment) isAnEndpoint(point *point) bool {
 	if point == nil {
 		return false
 	}
-	return (point.x == s.leftSE.point.x && point.y == s.leftSE.point.y) ||
-		(point.x == s.rightSE.point.x && point.y == s.rightSE.point.y)
+	return (point.x.equalTo(s.leftSE.point.x) && point.y.equalTo(s.leftSE.point.y)) ||
+		(point.x.equalTo(s.rightSE.point.x) && point.y.equalTo(s.rightSE.point.y))
 	// if s.leftSE != nil {
 	// 	// if almostEqual(point.x, s.leftSE.point.x) && almostEqual(point.y, s.leftSE.point.y) {
 	// 	if point.x == s.leftSE.point.x && point.y == s.leftSE.point.y {
@@ -293,61 +293,7 @@ func (s *segment) isAnEndpoint(point *point) bool {
 }
 
 func (s *segment) comparePoint(point *point) int {
-
-	if s.isAnEndpoint(point) {
-		return 0
-	}
-
-	lPt := s.leftSE.point
-	rPt := s.rightSE.point
-	v := s.vector()
-
-	// Exactly vertical segments.
-
-	if almostEqual(lPt.x, rPt.x) {
-		return flpCmp(point.x, lPt.x)
-	}
-
-	// original implementation
-	// if lPt.x == rPt.x {
-	// 	if point.x == lPt.x {
-	// 		return 0
-	// 	}
-	// 	if point.x < lPt.x {
-	// 		return 1
-	// 	}
-	// 	return -1
-	// }
-
-	// Nearly vertical segments with an intersection.
-	// Check to see where a point on the line with matching Y coordinate is.
-	yDist := (point.y - lPt.y) / v[1]
-	xFromYDist := lPt.x + yDist*v[0]
-
-	if almostEqual(point.x, xFromYDist) {
-		return 0
-	}
-
-	// original implementation
-	// if point.x == xFromYDist {
-	// 	return 0
-	// }
-
-	// General case.
-	// Check to see where a point on the line with matching X coordinate is.
-	xDist := (point.x - lPt.x) / v[0]
-	yFromXDist := lPt.y + xDist*v[1]
-
-	return flpCmp(point.y, yFromXDist)
-
-	// original implementation
-	// if point.y == yFromXDist {
-	// 	return 0
-	// }
-	// if point.y < yFromXDist {
-	// 	return -1
-	// }
-	// return 1
+	return orient(s.leftSE.point.Vector, point.vector(), s.rightSE.point.Vector)
 }
 
 func (s *segment) getIntersection(other *segment) *point {
@@ -377,10 +323,10 @@ func (s *segment) getIntersection(other *segment) *point {
 	// does each endpoint touch the other segment?
 	// note that we restrict the 'touching' definition to only allow segments
 	// to touch endpoints that lie forward from where we are in the sweep line pass
-	touchesOtherLSE := segBbox.isInBbox(*olp) && s.comparePoint(olp) == 0
-	touchesThisLSE := otherBbox.isInBbox(*tlp) && other.comparePoint(tlp) == 0
-	touchesOtherRSE := segBbox.isInBbox(*orp) && s.comparePoint(orp) == 0
-	touchesThisRSE := otherBbox.isInBbox(*trp) && other.comparePoint(trp) == 0
+	touchesOtherLSE := segBbox.isInBbox(olp.Vector) && s.comparePoint(olp) == 0
+	touchesThisLSE := otherBbox.isInBbox(tlp.Vector) && other.comparePoint(tlp) == 0
+	touchesOtherRSE := segBbox.isInBbox(orp.Vector) && s.comparePoint(orp) == 0
+	touchesThisRSE := otherBbox.isInBbox(trp.Vector) && other.comparePoint(trp) == 0
 
 	// do left endpoints match?
 	if touchesThisLSE && touchesOtherLSE {
@@ -401,7 +347,7 @@ func (s *segment) getIntersection(other *segment) *point {
 	if touchesThisLSE {
 		// check for segments that just intersect on opposing endpoints
 		if touchesOtherRSE {
-			if tlp.x == orp.x && tlp.y == orp.y {
+			if tlp.x.equalTo(orp.x) && tlp.y.equalTo(orp.y) {
 				return nil
 			}
 		}
@@ -413,7 +359,7 @@ func (s *segment) getIntersection(other *segment) *point {
 	if touchesOtherLSE {
 		// check for segments that just intersect on opposing endpoints
 		if touchesThisRSE {
-			if trp.x == olp.x && trp.y == olp.y {
+			if trp.x.equalTo(olp.x) && trp.y.equalTo(olp.y) {
 				return nil
 			}
 		}
@@ -438,77 +384,26 @@ func (s *segment) getIntersection(other *segment) *point {
 	// infinite lines laid over the segments
 
 	pt := intersection(
+		tlp.vector(),
 		s.vector(),
+		olp.vector(),
 		other.vector(),
-		tlp.xy(),
-		olp.xy(),
 	)
-	var ptInter *point
-	if pt != nil {
-		ptInter = newPoint(pt[0], pt[1])
-	}
-
-	// ptInter := lineToLineIntersection(
-	// 	s.leftSE.point, s.rightSE.point,
-	// 	other.leftSE.point, other.rightSE.point)
-
-	defer func() { ptInter = nil }() // clean up dangling pointer
 
 	// are the segments parallel? Note that if they were colinear with overlap,
 	// they would have an endpoint intersection and that case was already handled above
-	if ptInter == nil {
+	if pt == nil {
 		return nil
 	}
+	ptInter := &point{Vector: *pt}
 
 	// is the intersection found between the lines not on the segments?
-	if !bboxOverlap.isInBbox(*ptInter) {
+	if !bboxOverlap.isInBbox(ptInter.Vector) {
 		return nil
 	}
 
+	// round the the computed point if needed
 	return s.op.rounder.round(ptInter.x, ptInter.y)
-}
-
-func lineToLineIntersection(
-	line1Start, line1End,
-	line2Start, line2End *point,
-) *point {
-	// from github.com/twpayne/go-geom/xy/lineintersector/nonrobust_line_intersector.go
-
-	var a2, b2 float64
-	var c2, r1, r2, r3, r4 float64
-
-	a1 := line1End.y - line1Start.y
-	b1 := line1Start.x - line1End.x
-	c1 := line1End.x*line1Start.y - line1Start.x*line1End.y
-
-	r3 = a1*line2Start.x + b1*line2Start.y + c1
-	r4 = a1*line2End.x + b1*line2End.y + c1
-
-	if r3 != 0 && r4 != 0 && isSameSignAndNonZero(r3, r4) {
-		return nil
-	}
-
-	a2 = line2End.y - line2Start.y
-	b2 = line2Start.x - line2End.x
-	c2 = line2End.x*line2Start.y - line2Start.x*line2End.y
-
-	r1 = a2*line1Start.x + b2*line1Start.y + c2
-	r2 = a2*line1End.x + b2*line1End.y + c2
-
-	if r1 != 0 && r2 != 0 && isSameSignAndNonZero(r1, r2) {
-		return nil
-	}
-
-	denom := a1*b2 - a2*b1
-	if denom == 0 {
-		/// ??? collinear intersection?
-		return nil
-	}
-
-	numX := b1*c2 - b2*c1
-	numY := a2*c1 - a1*c2
-
-	return newPoint(numX/denom, numY/denom)
 }
 
 func (s *segment) split(point *point) []*sweepEvent {
@@ -782,11 +677,4 @@ func abs(x int) int {
 		return -x
 	}
 	return x
-}
-
-func isSameSignAndNonZero(a, b float64) bool {
-	if a == 0 || b == 0 {
-		return false
-	}
-	return (a < 0 && b < 0) || (a > 0 && b > 0)
 }

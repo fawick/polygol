@@ -20,11 +20,14 @@ func (pr *ptRounder) reset() {
 	pr.yRounder = newCoordRounder()
 }
 
-func (pr *ptRounder) round(x, y float64) *point {
-	return newPoint(
-		pr.xRounder.round(x),
-		pr.yRounder.round(y),
-	)
+func (pr *ptRounder) roundFloat(x, y float64) *point {
+	return pr.round(newBigNumber(x), newBigNumber(y))
+}
+
+func (pr *ptRounder) round(x, y BigNumber) *point {
+	x = pr.xRounder.round(x)
+	y = pr.yRounder.round(y)
+	return newPointBN(x, y)
 }
 
 type coordRounder struct {
@@ -32,32 +35,26 @@ type coordRounder struct {
 }
 
 func newCoordRounder() *coordRounder {
-	cr := new(coordRounder)
 	less := func(a, b interface{}) int {
-		af := a.(float64)
-		bf := b.(float64)
-		if af > bf {
-			return 1
-		}
-		if af < bf {
-			return -1
-		}
-		return 0
+		af := a.(BigNumber)
+		bf := b.(BigNumber)
+		return compare(af, bf)
 	}
-	cr.tree = splaytree.New(less)
-	cr.round(0.0)
+	cr := &coordRounder{
+		tree: splaytree.New(less),
+	}
+	cr.round(bigZero())
 	return cr
 }
 
-func (cr *coordRounder) round(coord float64) float64 {
-
+func (cr *coordRounder) round(coord BigNumber) BigNumber {
 	node := cr.tree.Add(coord)
-	item := node.Item().(float64)
+	item := node.Item().(BigNumber)
 
 	prevNode := cr.tree.Prev(node)
 	if prevNode != nil {
-		prevItem := prevNode.Item().(float64)
-		if flpCmp(item, prevItem) == 0 {
+		prevItem := prevNode.Item().(BigNumber)
+		if item.equalTo(prevItem) {
 			cr.tree.Remove(coord)
 			return prevItem
 		}
@@ -65,12 +62,12 @@ func (cr *coordRounder) round(coord float64) float64 {
 
 	nextNode := cr.tree.Next(node)
 	if nextNode != nil {
-		nextItem := nextNode.Item().(float64)
-		if flpCmp(item, nextItem) == 0 {
+		nextItem := nextNode.Item().(BigNumber)
+		if item.equalTo(nextItem) {
 			cr.tree.Remove(coord)
 			return nextItem
 		}
 	}
 
-	return coord
+	return item
 }

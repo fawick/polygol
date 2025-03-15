@@ -1,351 +1,297 @@
 package polygol
 
-import (
-	"math"
-	"testing"
-)
+import "testing"
 
-func TestVectorCrossProduct(t *testing.T) {
-	t.Parallel()
-
-	v1 := []float64{1, 2}
-	v2 := []float64{3, 4}
-	expect(t, crossProduct(v1, v2) == -2.0)
+func Test_crossProduct(t *testing.T) {
+	pt1 := Vector{x: newBigNumber(1), y: newBigNumber(2)}
+	pt2 := Vector{x: newBigNumber(3), y: newBigNumber(4)}
+	expect(t, crossProduct(pt1, pt2).equalTo(newBigNumber(-2)))
 }
 
-func TestVectorDotProduct(t *testing.T) {
-	t.Parallel()
-
-	v1 := []float64{1, 2}
-	v2 := []float64{3, 4}
-	expect(t, dotProduct(v1, v2) == 11.0)
+func Test_dotProduct(t *testing.T) {
+	pt1 := Vector{x: newBigNumber(1), y: newBigNumber(2)}
+	pt2 := Vector{x: newBigNumber(3), y: newBigNumber(4)}
+	expect(t, dotProduct(pt1, pt2).equalTo(newBigNumber(11)))
 }
 
-func TestVectorLength(t *testing.T) {
-	t.Parallel()
+func Test_length(t *testing.T) {
+	testCases := []struct {
+		name string
+		v    Vector
+		l    BigNumber
+	}{
+		{
+			name: "horizontal",
+			v:    Vector{x: newBigNumber(3), y: newBigNumber(0)},
+			l:    newBigNumber(3),
+		},
+		{
+			name: "vertical",
+			v:    Vector{x: newBigNumber(0), y: newBigNumber(-2)},
+			l:    newBigNumber(2),
+		},
+		{
+			name: "3-4-5",
+			v:    Vector{x: newBigNumber(3), y: newBigNumber(4)},
+			l:    newBigNumber(5),
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			expect(t, length(tt.v).equalTo(tt.l))
 
-	var v []float64
-
-	// horizontal
-	v = []float64{3, 0}
-	expect(t, length(v) == 3.0)
-
-	// vertical
-	v = []float64{0, -2}
-	expect(t, length(v) == 2.0)
-
-	// 3-4-5
-	v = []float64{3, 4}
-	expect(t, length(v) == 5.0)
+		})
+	}
 }
 
-func TestVectorCompareAngles(t *testing.T) {
-	t.Parallel()
-
-	var pt1, pt2, pt3 []float64
-
-	// colinear
-	pt1 = []float64{1, 1}
-	pt2 = []float64{2, 2}
-	pt3 = []float64{3, 3}
-	expect(t, compareAngles(pt1, pt2, pt3) == 0)
-	expect(t, compareAngles(pt2, pt1, pt3) == 0)
-	expect(t, compareAngles(pt2, pt3, pt1) == 0)
-	expect(t, compareAngles(pt3, pt2, pt1) == 0)
-
-	// offset
-	pt1 = []float64{0, 0}
-	pt2 = []float64{1, 1}
-	pt3 = []float64{1, 0}
-	expect(t, compareAngles(pt1, pt2, pt3) == -1)
-	expect(t, compareAngles(pt2, pt1, pt3) == 1)
-	expect(t, compareAngles(pt2, pt3, pt1) == -1)
-	expect(t, compareAngles(pt3, pt2, pt1) == 1)
+func Test_sineAndCosineOfAngle(t *testing.T) {
+	testCases := []struct {
+		name    string
+		shared  Vector
+		base    Vector
+		angle   Vector
+		sine    BigNumber
+		cosine  BigNumber
+		closeTo bool
+	}{
+		{
+			name:   "parallel",
+			shared: Vector{x: newBigNumber(0), y: newBigNumber(0)},
+			base:   Vector{x: newBigNumber(1), y: newBigNumber(0)},
+			angle:  Vector{x: newBigNumber(1), y: newBigNumber(0)},
+			sine:   newBigNumber(0),
+			cosine: newBigNumber(1),
+		},
+		{
+			name:    "45 degrees",
+			shared:  Vector{x: newBigNumber(0), y: newBigNumber(0)},
+			base:    Vector{x: newBigNumber(1), y: newBigNumber(0)},
+			angle:   Vector{x: newBigNumber(1), y: newBigNumber(-1)},
+			sine:    newBigNumber(2).sqrt().div(newBigNumber(2)),
+			cosine:  newBigNumber(2).sqrt().div(newBigNumber(2)),
+			closeTo: true,
+		},
+		{
+			name:   "90 degrees",
+			shared: Vector{x: newBigNumber(0), y: newBigNumber(0)},
+			base:   Vector{x: newBigNumber(1), y: newBigNumber(0)},
+			angle:  Vector{x: newBigNumber(0), y: newBigNumber(-1)},
+			sine:   newBigNumber(1),
+			cosine: newBigNumber(0),
+		},
+		{
+			name:    "135 degrees",
+			shared:  Vector{x: newBigNumber(0), y: newBigNumber(0)},
+			base:    Vector{x: newBigNumber(1), y: newBigNumber(0)},
+			angle:   Vector{x: newBigNumber(-1), y: newBigNumber(-1)},
+			sine:    newBigNumber(2).sqrt().div(newBigNumber(2)),
+			cosine:  newBigNumber(2).sqrt().negated().div(newBigNumber(2)),
+			closeTo: true,
+		},
+		{
+			name:   "anti-parallel",
+			shared: Vector{x: newBigNumber(0), y: newBigNumber(0)},
+			base:   Vector{x: newBigNumber(1), y: newBigNumber(0)},
+			angle:  Vector{x: newBigNumber(-1), y: newBigNumber(0)},
+			sine:   newBigNumber(0),
+			cosine: newBigNumber(-1),
+		},
+		{
+			name:    "225 degrees",
+			shared:  Vector{x: newBigNumber(0), y: newBigNumber(0)},
+			base:    Vector{x: newBigNumber(1), y: newBigNumber(0)},
+			angle:   Vector{x: newBigNumber(-1), y: newBigNumber(1)},
+			sine:    newBigNumber(2).sqrt().negated().div(newBigNumber(2)),
+			cosine:  newBigNumber(2).sqrt().negated().div(newBigNumber(2)),
+			closeTo: true,
+		},
+		{
+			name:   "270 degrees",
+			shared: Vector{x: newBigNumber(0), y: newBigNumber(0)},
+			base:   Vector{x: newBigNumber(1), y: newBigNumber(0)},
+			angle:  Vector{x: newBigNumber(0), y: newBigNumber(1)},
+			sine:   newBigNumber(-1),
+			cosine: newBigNumber(0),
+		},
+		{
+			name:    "315 degrees",
+			shared:  Vector{x: newBigNumber(0), y: newBigNumber(0)},
+			base:    Vector{x: newBigNumber(1), y: newBigNumber(0)},
+			angle:   Vector{x: newBigNumber(1), y: newBigNumber(1)},
+			sine:    newBigNumber(2).sqrt().negated().div(newBigNumber(2)),
+			cosine:  newBigNumber(2).sqrt().div(newBigNumber(2)),
+			closeTo: true,
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Run("sine", func(t *testing.T) {
+				if tt.closeTo {
+					expect(t, sineOfAngle(tt.shared, tt.base, tt.angle).closeTo(tt.sine))
+				} else {
+					expect(t, sineOfAngle(tt.shared, tt.base, tt.angle).equalTo(tt.sine))
+				}
+			})
+			t.Run("cosine", func(t *testing.T) {
+				if tt.closeTo {
+					expect(t, cosineOfAngle(tt.shared, tt.base, tt.angle).closeTo(tt.cosine))
+				} else {
+					expect(t, cosineOfAngle(tt.shared, tt.base, tt.angle).equalTo(tt.cosine))
+				}
+			})
+		})
+	}
 }
 
-func TestVectorSineAndCosineOfAngle(t *testing.T) {
-	t.Parallel()
-
-	var shared, base, angle []float64
-
-	// parallel
-	shared = []float64{0, 0}
-	base = []float64{1, 0}
-	angle = []float64{1, 0}
-	expect(t, sineOfAngle(shared, base, angle) == 0.0)
-	expect(t, cosineOfAngle(shared, base, angle) == 1.0)
-
-	// 45 degrees
-	shared = []float64{0, 0}
-	base = []float64{1, 0}
-	angle = []float64{1, -1}
-	expect(t, almostEqual(sineOfAngle(shared, base, angle), math.Sqrt(2.0)/2.0))
-	expect(t, almostEqual(cosineOfAngle(shared, base, angle), math.Sqrt(2.0)/2.0))
-
-	// 90 degrees
-	shared = []float64{0, 0}
-	base = []float64{1, 0}
-	angle = []float64{0, -1}
-	expect(t, sineOfAngle(shared, base, angle) == 1)
-	expect(t, cosineOfAngle(shared, base, angle) == 0)
-
-	// 135 degrees
-	shared = []float64{0, 0}
-	base = []float64{1, 0}
-	angle = []float64{-1, -1}
-	expect(t, almostEqual(sineOfAngle(shared, base, angle), math.Sqrt(2.0)/2.0))
-	expect(t, almostEqual(cosineOfAngle(shared, base, angle), -math.Sqrt(2.0)/2.0))
-
-	// anti-parallel
-	shared = []float64{0, 0}
-	base = []float64{1, 0}
-	angle = []float64{-1, 0}
-	expect(t, sineOfAngle(shared, base, angle) == 0)
-	expect(t, cosineOfAngle(shared, base, angle) == -1)
-
-	// 225 degrees
-	shared = []float64{0, 0}
-	base = []float64{1, 0}
-	angle = []float64{-1, 1}
-	expect(t, almostEqual(sineOfAngle(shared, base, angle), -math.Sqrt(2.0)/2.0))
-	expect(t, almostEqual(cosineOfAngle(shared, base, angle), -math.Sqrt(2.0)/2.0))
-
-	// 270 degrees
-	shared = []float64{0, 0}
-	base = []float64{1, 0}
-	angle = []float64{0, 1}
-	expect(t, sineOfAngle(shared, base, angle) == -1)
-	expect(t, cosineOfAngle(shared, base, angle) == 0)
-
-	// 315 degrees
-	shared = []float64{0, 0}
-	base = []float64{1, 0}
-	angle = []float64{1, 1}
-	expect(t, almostEqual(sineOfAngle(shared, base, angle), -math.Sqrt(2.0)/2.0))
-	expect(t, almostEqual(cosineOfAngle(shared, base, angle), math.Sqrt(2.0)/2.0))
+func Test_perpendicular(t *testing.T) {
+	testCases := []struct {
+		name string
+		v    Vector
+	}{
+		{
+			name: "vertical",
+			v:    Vector{x: newBigNumber(0), y: newBigNumber(1)},
+		},
+		{
+			name: "horizontal",
+			v:    Vector{x: newBigNumber(1), y: newBigNumber(0)},
+		},
+		{
+			name: "45 degrees",
+			v:    Vector{x: newBigNumber(1), y: newBigNumber(1)},
+		},
+		{
+			name: "120 degrees",
+			v:    Vector{x: newBigNumber(-1), y: newBigNumber(2)},
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			r := perpendicular(tt.v)
+			expect(t, dotProduct(tt.v, r).equalTo(newBigNumber(0)))
+			expect(t, crossProduct(tt.v, r).notEqualTo(newBigNumber(0)))
+		})
+	}
 }
 
-func TestVectorPerpindicular(t *testing.T) {
-	t.Parallel()
-
-	var v, r []float64
-
-	// vertical
-	v = []float64{0, 1}
-	r = perpendicular(v)
-	expect(t, dotProduct(v, r) == 0)
-	expect(t, crossProduct(v, r) != 0)
-
-	// horizontal
-	v = []float64{1, 0}
-	r = perpendicular(v)
-	expect(t, dotProduct(v, r) == 0)
-	expect(t, crossProduct(v, r) != 0)
-
-	// 45 degrees
-	v = []float64{1, 1}
-	r = perpendicular(v)
-	expect(t, dotProduct(v, r) == 0)
-	expect(t, crossProduct(v, r) != 0)
-
-	// 120 degrees
-	v = []float64{-1, 2}
-	r = perpendicular(v)
-	expect(t, dotProduct(v, r) == 0)
-	expect(t, crossProduct(v, r) != 0)
+func Test_verticalIntersection(t *testing.T) {
+	t.Run("horizontal", func(t *testing.T) {
+		p := Vector{x: newBigNumber(42), y: newBigNumber(3)}
+		v := Vector{x: newBigNumber(-2), y: newBigNumber(0)}
+		x := newBigNumber(37)
+		i := verticalIntersection(p, v, x)
+		expect(t, i.x.equalTo(newBigNumber(37)))
+		expect(t, i.y.equalTo(newBigNumber(3)))
+	})
+	t.Run("vertical", func(t *testing.T) {
+		p := Vector{x: newBigNumber(42), y: newBigNumber(3)}
+		v := Vector{x: newBigNumber(0), y: newBigNumber(4)}
+		x := newBigNumber(-2)
+		i := verticalIntersection(p, v, x)
+		if i != nil {
+			t.FailNow()
+		}
+	})
+	t.Run("45 degrees", func(t *testing.T) {
+		p := Vector{x: newBigNumber(1), y: newBigNumber(1)}
+		v := Vector{x: newBigNumber(1), y: newBigNumber(1)}
+		x := newBigNumber(-2)
+		i := verticalIntersection(p, v, x)
+		expect(t, i.x.equalTo(newBigNumber(-2)))
+		expect(t, i.y.equalTo(newBigNumber(-2)))
+	})
+	t.Run("upper left quadrant", func(t *testing.T) {
+		p := Vector{x: newBigNumber(-1), y: newBigNumber(1)}
+		v := Vector{x: newBigNumber(-2), y: newBigNumber(1)}
+		x := newBigNumber(-3)
+		i := verticalIntersection(p, v, x)
+		expect(t, i.x.equalTo(newBigNumber(-3)))
+		expect(t, i.y.equalTo(newBigNumber(2)))
+	})
 }
 
-func TestVectorClosestPoint(t *testing.T) {
-	t.Parallel()
-
-	var pA1, pA2, pB, cp, expected []float64
-
-	// on line
-	pA1 = []float64{2, 2}
-	pA2 = []float64{3, 3}
-	pB = []float64{-1, -1}
-	cp = closestPoint(pA1, pA2, pB)
-	expect(t, equal(cp, pB))
-
-	// on first point
-	pA1 = []float64{2, 2}
-	pA2 = []float64{3, 3}
-	pB = []float64{2, 2}
-	cp = closestPoint(pA1, pA2, pB)
-	expect(t, equal(cp, pB))
-
-	// off line above
-	pA1 = []float64{2, 2}
-	pA2 = []float64{3, 1}
-	pB = []float64{3, 7}
-	expected = []float64{0, 4}
-	expect(t, equal(closestPoint(pA1, pA2, pB), expected))
-	expect(t, equal(closestPoint(pA2, pA1, pB), expected))
-
-	// off line below
-	pA1 = []float64{2, 2}
-	pA2 = []float64{3, 1}
-	pB = []float64{0, 2}
-	expected = []float64{1, 3}
-	expect(t, equal(closestPoint(pA1, pA2, pB), expected))
-	expect(t, equal(closestPoint(pA2, pA1, pB), expected))
-
-	// off line perpendicular to first point
-	pA1 = []float64{2, 2}
-	pA2 = []float64{3, 3}
-	pB = []float64{1, 3}
-	cp = closestPoint(pA1, pA2, pB)
-	expected = []float64{2, 2}
-	expect(t, equal(cp, expected))
-
-	// horizontal vector
-	pA1 = []float64{2, 2}
-	pA2 = []float64{3, 2}
-	pB = []float64{1, 3}
-	cp = closestPoint(pA1, pA2, pB)
-	expected = []float64{1, 2}
-	expect(t, equal(cp, expected))
-
-	// vertical vector
-	pA1 = []float64{2, 2}
-	pA2 = []float64{2, 3}
-	pB = []float64{1, 3}
-	cp = closestPoint(pA1, pA2, pB)
-	expected = []float64{2, 3}
-	expect(t, equal(cp, expected))
-
-	// on line but dot product does not think so - part of issue 60-2
-	pA1 = []float64{-45.3269382, -1.4059341}
-	pA2 = []float64{-45.326737413921656, -1.40635}
-	pB = []float64{-45.326833968900424, -1.40615}
-	cp = closestPoint(pA1, pA2, pB)
-	expect(t, equal(cp, pB))
+func Test_horizontalIntersection(t *testing.T) {
+	t.Run("horizontal", func(t *testing.T) {
+		p := Vector{x: newBigNumber(42), y: newBigNumber(3)}
+		v := Vector{x: newBigNumber(-2), y: newBigNumber(0)}
+		x := newBigNumber(37)
+		i := horizontalIntersection(p, v, x)
+		if i != nil {
+			t.FailNow()
+		}
+	})
+	t.Run("vertical", func(t *testing.T) {
+		p := Vector{x: newBigNumber(42), y: newBigNumber(3)}
+		v := Vector{x: newBigNumber(0), y: newBigNumber(4)}
+		x := newBigNumber(37)
+		i := horizontalIntersection(p, v, x)
+		expect(t, i.x.equalTo(newBigNumber(42)))
+		expect(t, i.y.equalTo(newBigNumber(37)))
+	})
+	t.Run("45 degrees", func(t *testing.T) {
+		p := Vector{x: newBigNumber(1), y: newBigNumber(1)}
+		v := Vector{x: newBigNumber(1), y: newBigNumber(1)}
+		x := newBigNumber(4)
+		i := horizontalIntersection(p, v, x)
+		expect(t, i.x.equalTo(newBigNumber(4)))
+		expect(t, i.y.equalTo(newBigNumber(4)))
+	})
+	t.Run("bottom left quadrant", func(t *testing.T) {
+		p := Vector{x: newBigNumber(-1), y: newBigNumber(-1)}
+		v := Vector{x: newBigNumber(-2), y: newBigNumber(-1)}
+		x := newBigNumber(-3)
+		i := horizontalIntersection(p, v, x)
+		expect(t, i.x.equalTo(newBigNumber(-5)))
+		expect(t, i.y.equalTo(newBigNumber(-3)))
+	})
 }
 
-func TestVectorVerticalIntersection(t *testing.T) {
-	t.Parallel()
+func Test_intersection(t *testing.T) {
+	p1 := Vector{x: newBigNumber(42), y: newBigNumber(42)}
+	p2 := Vector{x: newBigNumber(-32), y: newBigNumber(46)}
 
-	var pt, i, v []float64
-	var x float64
-
-	// horizontal
-	pt = []float64{42, 3}
-	v = []float64{-2, 0}
-	x = 37
-	i = verticalIntersection(v, pt, x)
-	expect(t, i[0] == 37)
-	expect(t, i[1] == 3)
-
-	// vertical
-	pt = []float64{42, 3}
-	v = []float64{0, 4}
-	x = 37
-	expect(t, verticalIntersection(v, pt, x) == nil)
-
-	// 45 degree
-	pt = []float64{1, 1}
-	v = []float64{1, 1}
-	x = -2
-	i = verticalIntersection(v, pt, x)
-	expect(t, i[0] == -2)
-	expect(t, i[1] == -2)
-
-	// upper left quadrant
-	pt = []float64{-1, 1}
-	v = []float64{-2, 1}
-	x = -3
-	i = verticalIntersection(v, pt, x)
-	expect(t, i[0] == -3)
-	expect(t, i[1] == 2)
-}
-
-func TestVectorHorizontalIntersection(t *testing.T) {
-	t.Parallel()
-
-	var pt, i, v []float64
-	var y float64
-
-	// horizontal
-	pt = []float64{42, 3}
-	v = []float64{-2, 0}
-	y = 37
-	expect(t, horizontalIntersection(v, pt, y) == nil)
-
-	// vertical
-	pt = []float64{42, 3}
-	v = []float64{0, 4}
-	y = 37
-	i = horizontalIntersection(v, pt, y)
-	expect(t, i[0] == 42)
-	expect(t, i[1] == 37)
-
-	// 45 degree
-	pt = []float64{1, 1}
-	v = []float64{1, 1}
-	y = 4
-	i = horizontalIntersection(v, pt, y)
-	expect(t, i[0] == 4)
-	expect(t, i[1] == 4)
-
-	// bottom left quadrant
-	pt = []float64{-1, -1}
-	v = []float64{-2, -1}
-	y = -3
-	i = horizontalIntersection(v, pt, y)
-	expect(t, i[0] == -5)
-	expect(t, i[1] == -3)
-}
-
-func TestVectorIntersection(t *testing.T) {
-	t.Parallel()
-
-	var i, v1, v2 []float64
-
-	p1 := []float64{42, 42}
-	p2 := []float64{-32, 46}
-
-	// parallel
-	v1 = []float64{1, 2}
-	v2 = []float64{-1, -2}
-	i = intersection(v1, v2, p1, p2)
-	expect(t, i == nil)
-
-	// horizontal and vertical
-	v1 = []float64{0, 2}
-	v2 = []float64{-1, 0}
-	i = intersection(v1, v2, p1, p2)
-	expect(t, i[0] == 42)
-	expect(t, i[1] == 46)
-
-	// horizontal
-	v1 = []float64{1, 1}
-	v2 = []float64{-1, 0}
-	i = intersection(v1, v2, p1, p2)
-	expect(t, i[0] == 46)
-	expect(t, i[1] == 46)
-
-	// vertical
-	v1 = []float64{1, 1}
-	v2 = []float64{0, 1}
-	i = intersection(v1, v2, p1, p2)
-	expect(t, i[0] == -32)
-	expect(t, i[1] == -32)
-
-	// 45 degree && 135 degree
-	v1 = []float64{1, 1}
-	v2 = []float64{-1, 1}
-	i = intersection(v1, v2, p1, p2)
-	expect(t, i[0] == 7)
-	expect(t, i[1] == 7)
-
-	// consistency
-	// Taken from https://github.com/mfogel/polygon-clipping/issues/37
-	p1 = []float64{0.523787, 51.281453}
-	v1 = []float64{0.0002729999999999677, 0.0002729999999999677}
-	p2 = []float64{0.523985, 51.281651}
-	v2 = []float64{0.000024999999999941735, 0.000049000000004184585}
-	i1 := intersection(v1, v2, p1, p2)
-	i2 := intersection(v2, v1, p2, p1)
-	expect(t, i1[0] == i2[0])
-	expect(t, i1[1] == i2[1])
+	testCases := []struct {
+		name    string
+		v1      Vector
+		v2      Vector
+		invalid bool
+		x       BigNumber
+		y       BigNumber
+	}{
+		{
+			name:    "parallel",
+			v1:      Vector{x: newBigNumber(1), y: newBigNumber(2)},
+			v2:      Vector{x: newBigNumber(-1), y: newBigNumber(-2)},
+			invalid: true,
+		},
+		{
+			name: "horizontal and vertical",
+			v1:   Vector{x: newBigNumber(0), y: newBigNumber(2)},
+			v2:   Vector{x: newBigNumber(-1), y: newBigNumber(0)},
+			x:    newBigNumber(42),
+			y:    newBigNumber(46),
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			v1 := Vector{x: newBigNumber(1), y: newBigNumber(2)}
+			v2 := Vector{x: newBigNumber(-1), y: newBigNumber(-2)}
+			i := intersection(p1, v1, p2, v2)
+			if tt.invalid && i != nil {
+				t.FailNow()
+				expect(t, i.x.equalTo(tt.x))
+				expect(t, i.y.equalTo(tt.y))
+			}
+		})
+	}
+	t.Run("consistency", func(t *testing.T) {
+		p1 := Vector{x: newBigNumber(0.523787), y: newBigNumber(51.281453)}
+		v1 := Vector{x: newBigNumber(0.0002729999999999677), y: newBigNumber(0.0002729999999999677)}
+		p2 := Vector{x: newBigNumber(0.523985), y: newBigNumber(51.281651)}
+		v2 := Vector{x: newBigNumber(0.000024999999999941735), y: newBigNumber(0.000049000000004184585)}
+		i1 := intersection(p1, v1, p2, v2)
+		i2 := intersection(p2, v2, p1, v1)
+		expect(t, i1.x.equalTo(i2.x))
+		expect(t, i1.y.equalTo(i2.y))
+	})
 }

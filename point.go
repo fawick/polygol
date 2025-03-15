@@ -1,21 +1,36 @@
 package polygol
 
+import "fmt"
+
 type point struct {
-	x      float64
-	y      float64
+	Vector
 	events []*sweepEvent
 }
 
 func newPoint(x, y float64) *point {
 	return &point{
-		x: x, y: y,
+		Vector: Vector{
+			x: newBigNumber(x),
+			y: newBigNumber(y),
+		},
 	}
 }
 
-func (p point) xy() []float64 {
-	return []float64{p.x, p.y}
+func newPointBN(x, y BigNumber) *point {
+	return &point{
+		Vector: Vector{x: x, y: y},
+	}
 }
 
-func (p point) equal(point point) bool {
-	return p.x == point.x && p.y == point.y
+// TODO rename to vector
+func (p point) vector() Vector {
+	return p.Vector
+}
+
+func (p point) equal(other point) bool {
+	return p.x.equalTo(other.x) && p.y.equalTo(other.y)
+}
+
+func (p point) String() string {
+	return fmt.Sprintf("(%s, %s)", p.x, p.y)
 }

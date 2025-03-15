@@ -5,7 +5,7 @@ import (
 )
 
 func TestRounderRound(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 
 	var pt1, pt2, pt3 *point
 
@@ -13,10 +13,10 @@ func TestRounderRound(t *testing.T) {
 
 	// no overlap
 	t.Run("no-overlap", func(t *testing.T) {
-		rounder.reset()
-		pt1 = &point{x: 3, y: 4}
-		pt2 = &point{x: 4, y: 5}
-		pt3 = &point{x: 5, y: 5}
+		resetPrecision()
+		pt1 = newPoint(3, 4)
+		pt2 = newPoint(4, 5)
+		pt3 = newPoint(5, 5)
 		expect(t, rounder.round(pt1.x, pt1.y).equal(*pt1))
 		expect(t, rounder.round(pt2.x, pt2.y).equal(*pt2))
 		expect(t, rounder.round(pt3.x, pt3.y).equal(*pt3))
@@ -24,10 +24,10 @@ func TestRounderRound(t *testing.T) {
 
 	// exact overlap
 	t.Run("exact-overlap", func(t *testing.T) {
-		rounder.reset()
-		pt1 = &point{x: 3, y: 4}
-		pt2 = &point{x: 4, y: 5}
-		pt3 = &point{x: 3, y: 4}
+		resetPrecision()
+		pt1 = newPoint(3, 4)
+		pt2 = newPoint(4, 5)
+		pt3 = newPoint(3, 4)
 		expect(t, rounder.round(pt1.x, pt1.y).equal(*pt1))
 		expect(t, rounder.round(pt2.x, pt2.y).equal(*pt2))
 		expect(t, rounder.round(pt3.x, pt3.y).equal(*pt3))
@@ -35,30 +35,53 @@ func TestRounderRound(t *testing.T) {
 
 	// rounding one coordinate
 	t.Run("rounding-one-coordinate", func(t *testing.T) {
-		rounder.reset()
-		pt1 = &point{x: 3, y: 4}
-		pt2 = &point{x: 3 + epsilon, y: 4}
-		pt3 = &point{x: 3, y: 4 + epsilon}
+		setPrecision(NumberEPSILON)
+		pt1 = newPoint(3, 4)
+		pt2 = &point{
+			Vector: Vector{
+				x: newBigNumber(3).plus(newBigNumber(NumberEPSILON)),
+				y: newBigNumber(4),
+			},
+		}
+		pt3 = &point{
+			Vector: Vector{
+				x: newBigNumber(3),
+				y: newBigNumber(4).plus(newBigNumber(NumberEPSILON)),
+			},
+		}
 		expect(t, rounder.round(pt1.x, pt1.y).equal(*pt1))
 		expect(t, rounder.round(pt2.x, pt2.y).equal(*pt1))
 		expect(t, rounder.round(pt3.x, pt3.y).equal(*pt1))
+		resetPrecision()
 	})
 
 	// rounding both coordinates
 	t.Run("rounding-both-coordinates", func(t *testing.T) {
-		rounder.reset()
-		pt1 = &point{x: 3, y: 4}
-		pt2 = &point{x: 3 + epsilon, y: 4 + epsilon}
+		setPrecision(NumberEPSILON)
+		pt1 = newPoint(3, 4)
+		pt2 = &point{
+			Vector: Vector{
+				x: newBigNumber(3).plus(newBigNumber(NumberEPSILON)),
+				y: newBigNumber(4).plus(newBigNumber(NumberEPSILON)),
+			},
+		}
 		expect(t, rounder.round(pt1.x, pt1.y).equal(*pt1))
 		expect(t, rounder.round(pt2.x, pt2.y).equal(*pt1))
+		resetPrecision()
 	})
 
 	// preseed with 0
 	t.Run("preseed-with-zero", func(t *testing.T) {
-		rounder.reset()
-		pt1 = &point{x: epsilon / 2, y: -epsilon / 2}
-		expect(t, pt1.x != 0)
-		expect(t, pt1.y != 0)
-		expect(t, rounder.round(pt1.x, pt1.y).equal(point{x: 0, y: 0}))
+		setPrecision(NumberEPSILON)
+		pt1 = &point{
+			Vector: Vector{
+				x: newBigNumber(NumberEPSILON).div(newBigNumber(2)),
+				y: newBigNumber(-NumberEPSILON).div(newBigNumber(2)),
+			},
+		}
+		expect(t, !pt1.x.isZero())
+		expect(t, !pt1.y.isZero())
+		expect(t, rounder.round(pt1.x, pt1.y).equal(*newPoint(0, 0)))
+		resetPrecision()
 	})
 }
